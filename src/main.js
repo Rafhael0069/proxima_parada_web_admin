@@ -1,20 +1,15 @@
-/**
- * main.js
- *
- * Bootstraps Vuetify and other plugins then mounts the App`
- */
-
-// Plugins
-import { registerPlugins } from '@/plugins'
-
-// Components
+import Vue from 'vue'
 import App from './App.vue'
+import router from './router'
+import vuetify from './plugins/vuetify'
+import { VueMaskDirective } from 'v-mask'
 
-// Composables
-import { createApp } from 'vue'
+Vue.config.productionTip = false
+Vue.directive('mask', VueMaskDirective);
 
-const app = createApp(App)
-
-registerPlugins(app)
-
-app.mount('#app')
+new Vue({
+  history,
+  router,
+  vuetify,
+  render: h => h(App)
+}).$mount('#app')
