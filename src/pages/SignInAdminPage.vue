@@ -2,6 +2,16 @@
   <v-container fluid fill-height>
     <v-layout align-center justify-center>
       <v-flex xs8 sm6 md4>
+
+        <div>
+          <h1>Lista de Usuários</h1>
+          <ul>
+            <li v-for="usuario in usuarios" :key="usuario.idUser">
+              {{ usuario.name }} - {{ usuario.email }}
+            </li>
+          </ul>
+        </div>
+
         <v-card>
           <v-card-text>
             <v-alert
@@ -65,8 +75,31 @@
 
 <script>
 import Auth from "../services/auth";
+import { ref, onMounted } from 'vue';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../services/configFirebase';
 
 export default {
+  name: 'UserList',
+  setup() {
+    const usuarios = ref([]);
+
+    const fetchUsuarios = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        usuarios.value = querySnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+      } catch (error) {
+        console.error('Erro ao obter dados:', error);
+      }
+    };
+
+    onMounted(fetchUsuarios);
+    return { usuarios };
+  }
+    ,
   data() {
     return {
       adminAuth: {
