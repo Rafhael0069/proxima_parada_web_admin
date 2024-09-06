@@ -9,7 +9,7 @@ const routes = [
     redirect:{ name: "signinadmin" },
   },
   {
-    path: "/auth",
+    path: "/",
     name: "auth",
     component: () => import("../layouts/AuthLayout.vue"),
     children:[

@@ -32,7 +32,7 @@
         type="info"
       >Nenhuma Requisição não lida encontrada</v-alert>
       <v-col
-        v-for="(request, i) in requestList"
+        v-for="(requesition, i) in requisitions"
         :key="i"
         cols="12"
         sm="6"
@@ -42,27 +42,27 @@
         <v-card
           class="mx-auto"
           outlined
-          @click.stop="openDialoStatusRequest(request)"
+          @click.stop="openDialoStatusRequest(requesition)"
         >
           <v-list-item three-line>
             <v-list-item-content>
               <v-list-item-title class="text-h5 mb-1">
-                {{ request.localUser.name }}
+                {{ requesition.localUser.name }}
               </v-list-item-title>
               <v-list-item-subtitle class="text-h5 mb-1">
-                {{ request.localUser.occupation }}
+                {{ requesition.localUser.occupation }}
               </v-list-item-subtitle>
             </v-list-item-content>
 
-            <v-list-item-avatar size="100" v-if="!request.localUser.imageLocation">
+            <v-list-item-avatar size="100" v-if="!requesition.localUser.imageLocation">
               <v-img
                 src="https://e7.pngegg.com/pngimages/178/595/png-clipart-user-profile-computer-icons-login-user-avatars-monochrome-black.png"
               />
             </v-list-item-avatar>
             <v-list-item-avatar v-else size="80">
               <v-img
-                v-if="request.localUser.imageLocation"
-                :src="request.localUser.imageLocation"
+                v-if="requesition.localUser.imageLocation"
+                :src="requesition.localUser.imageLocation"
               />
             </v-list-item-avatar>
           </v-list-item>
@@ -95,14 +95,6 @@
                           outlined
                           readonly
                           v-model="selectedItem.localUser.name"
-                        />
-                      </v-col>
-                      <v-col cols="12" sm="4" md="4" class="ma-0 pa-1">
-                        <v-text-field
-                          class="pa-0 ma-0"
-                          outlined
-                          readonly
-                          v-model="selectedItem.localUser.occupation"
                         />
                       </v-col>
                     </v-row>
@@ -157,14 +149,14 @@
                         <v-text-field
                           outlined
                           readonly
-                          v-model="selectedItem.localUser.Vehicle.brand"
+                          v-model="selectedItem.localUser.userVehicle.brand"
                         />
                       </v-col>
                       <v-col cols="12" sm="6" md="6">
                         <v-text-field
                           outlined
                           readonly
-                          v-model="selectedItem.localUser.Vehicle.model"
+                          v-model="selectedItem.localUser.userVehicle.model"
                         />
                       </v-col>
                     </v-row>
@@ -185,8 +177,8 @@
                     </v-avatar>
                     <v-avatar v-else size="204" tile>
                       <v-img
-                        v-if="selectedItem.localUser.Vehicle.imageLocation"
-                        :src="selectedItem.localUser.Vehicle.imageLocation"
+                        v-if="selectedItem.localUser.userVehicle.imageLocation"
+                        :src="selectedItem.localUser.userVehicle.imageLocation"
                       />
                     </v-avatar>
                   </v-row>
@@ -210,7 +202,7 @@
                     <v-btn
                       color="error"
                       block
-                      @click="updateStatusRequest(false)"
+                      @click="updateStatusRequest(false, selectedItem)"
                     >
                       Rejeitar
                     </v-btn>
@@ -219,7 +211,7 @@
                     <v-btn
                       color="success"
                       block
-                      @click="updateStatusRequest(true)"
+                      @click="updateStatusRequest(true, selectedItem)"
                     >
                       Aceitar
                     </v-btn>
@@ -235,8 +227,8 @@
 </template>
 
 <script>
-import Admin from "../services/admin";
-import { collection, getDocs } from "firebase/firestore";
+//import Admin from "../services/admin";
+import { collection, getDocs, getFirestore, doc, runTransaction } from "firebase/firestore";
 import { db } from "@/services/firebaseConfig";
 
 export default {
@@ -255,67 +247,24 @@ export default {
       alertError: false,
       alertSuccess: false,
       alertMessage: "Erro ao conectar-se ao banco de dados!",
-      driverRequests: [],
       
     };
   },
   methods: {
+    
     async getAllStatusRequest() {
       this.loading = true;
       this.requisitions = [];
       try {
-        const res = await Admin.getAllStatusRequest(collection(db, "requisitions"));
-        console.log("testando retorno de statusRequeset", res.data);
-        if (res.data.length === 0) {
-          this.alertInfo = true;
-        } else {
-          this.requisitions = res.data;
-        }
-        this.finishiProcess();
-      } catch (error) {
-        this.showErrorAlert(true, error.response.data.message);
-        console.log(error.response.data);
-      }
-    },
-
-    async updateStatusRequest(status) {
-      this.statusLoading = true;
-      const data = {
-        id: this.selectedItem.id,
-        id_user: this.selectedItem.id_user,
-        statusDescriptionDenied: this.selectedItem.statusDescriptionDenied,
-        status: status,
-      };
-      try {
-        const res = await Admin.updateStatusRequest(data);
-        console.log(res);
-        this.statusLoading = false;
-        this.dialogConfirmStatusRequest = false;
-        this.showSuccessAlert(true, "Requisição respondida com sucesso.");
-        this.getAllStatusRequest();
-      } catch (error) {
-        this.statusLoading = false;
-        this.dialogConfirmStatusRequest = false;
-        this.showErrorAlert(true, error.response.data.message);
-        console.log(error.response.data);
-      }
-    },
-
-    async fetchDriverRequests() {
-      this.loading = true;
-      try {
         this.loading = true;
         const querySnapshot = await getDocs(collection(db, "requisitions"));
         querySnapshot.forEach(dr => {
-          this.driverRequests.push(dr.data());
+          this.requisitions.push(dr.data());
         });
-        if (this.driverRequests.length === 0) {
+        if (this.requisitions.length === 0) {
           this.alertInfo = true;
         } else {
-          this.alertInfo = false;
-        }
-
-         this.driverRequests = querySnapshot.docs.map(doc => {
+          this.requisitions = querySnapshot.docs.map(doc => {
           const data = doc.data();
           return {
             idRequisition: data.idRequisition,
@@ -341,13 +290,82 @@ export default {
             statusRequest: data.statusRequest,
           };
           });
-
+        }
       } catch (error) {
         console.log(error);
         this.erroAlert = true;
       }
       this.loading = false;
       console.log(this.driverRequests)
+    },
+    
+
+    async updateStatusRequest(status, selectedItem) {
+      const db = getFirestore();
+      this.statusLoading = true;
+      try {
+        await runTransaction(db, async (transaction) => {
+          // Referência para o documento na coleção 'requisitions'
+          const requisitionRef = doc(db, "requisitions", selectedItem.idRequisition);
+          
+          // Referência para o documento na coleção 'users'
+          const userRef = doc(db, "users", selectedItem.localUser.idUser);
+
+          // Obter os documentos para garantir que eles existem
+          const requisitionDoc = await transaction.get(requisitionRef);
+          const userDoc = await transaction.get(userRef);
+
+          if (!requisitionDoc.exists() || !userDoc.exists()) {
+            throw new Error("Os documentos especificados não existem.");
+          }
+
+          // Atualizar os campos na coleção 'requisitions'
+          transaction.update(requisitionRef, {
+            "localUser": {
+              "isDrive": status,
+            },
+            "statusRequest": status,
+            "readRequest": status,
+          });
+
+          // Atualizar o campo na coleção 'users'
+          transaction.update(userRef, {
+            "isDriver": status,
+          });
+          
+        });
+          this.statusLoading = false;
+          this.dialogConfirmStatusRequest = false;
+          this.showSuccessAlert(true, "Requisição respondida com sucesso.");
+          this.getAllStatusRequest();
+          console.log("Atualização concluída com sucesso!");
+        } catch (error) {
+          console.error("Erro ao atualizar as coleções: ", error);
+          this.statusLoading = false;
+          this.dialogConfirmStatusRequest = false;
+          this.showErrorAlert(true, error.response.data.message);
+          console.log(error.response.data);
+        }
+      /*
+      const data = {
+        id: this.selectedItem.id,
+        id_user: this.selectedItem.id_user,
+        statusDescriptionDenied: this.selectedItem.statusDescriptionDenied,
+        status: status,
+      };
+      try {
+        const res = await Admin.updateStatusRequest(data);
+        console.log(res);
+        this.statusLoading = false;
+        this.dialogConfirmStatusRequest = false;
+        this.showSuccessAlert(true, "Requisição respondida com sucesso.");
+        this.getAllStatusRequest();
+      } catch (error) {
+        this.statusLoading = false;
+        this.dialogConfirmStatusRequest = false;
+        this.showErrorAlert(true, error.response.data.message);
+        console.log(error.response.data);
+      }*/
     },
 
     openDialoStatusRequest(item) {
@@ -380,8 +398,7 @@ export default {
   },
 
   created() {
-    // this.getAllStatusRequest();
-    this.fetchDriverRequests();
+    this.getAllStatusRequest();
   },
 };
 </script>
