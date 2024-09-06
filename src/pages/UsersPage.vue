@@ -131,6 +131,8 @@
 </template>
 <script>
 import Admin from "../services/admin";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/services/firebaseConfig";
 export default {
   data: () => ({
     usuarios: [
@@ -192,12 +194,28 @@ export default {
       }
     },
 
+    async AllUsers() {
+      try {
+        this.loading = true;
+        const querySnapshot = await getDocs(collection(db, "users"));
+        querySnapshot.forEach(qs => {
+          this.usuarios.push(qs.data());
+        });
+      } catch (error) {
+        console.log(error);
+        this.erroAlert = true;
+      }
+      this.loading = false;
+      console.log(this.usuarios)
+    },
+
     expand(index) {
       this.usuarios[index].expand = !this.usuarios[index].expand;
     },
   },
   created() {
-    this.getAllUsers();
+    // this.getAllUsers();
+    this.AllUsers();
   },
 };
 </script>

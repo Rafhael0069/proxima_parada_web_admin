@@ -2,16 +2,6 @@
   <v-container fluid fill-height>
     <v-layout align-center justify-center>
       <v-flex xs8 sm6 md4>
-
-        <div>
-          <h1>Lista de Usuários</h1>
-          <ul>
-            <li v-for="usuario in usuarios" :key="usuario.idUser">
-              {{ usuario.name }} - {{ usuario.email }}
-            </li>
-          </ul>
-        </div>
-
         <v-card>
           <v-card-text>
             <v-alert
@@ -74,37 +64,14 @@
 </template>
 
 <script>
-import Auth from "../services/auth";
-import { ref, onMounted } from 'vue';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../services/configFirebase';
+import { loginWithEmailAndPassword } from "../services/auth";
 
 export default {
-  name: 'UserList',
-  setup() {
-    const usuarios = ref([]);
-
-    const fetchUsuarios = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, 'users'));
-        usuarios.value = querySnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-      } catch (error) {
-        console.error('Erro ao obter dados:', error);
-      }
-    };
-
-    onMounted(fetchUsuarios);
-    return { usuarios };
-  }
-    ,
   data() {
     return {
       adminAuth: {
-        email: "",
-        password: "",
+        email: "useradm@gmail.com",
+        password: "12345678",
       },
       messageError: "Erro ao conetar-se a internet!",
       loading: false,
@@ -123,11 +90,12 @@ export default {
       },
     };
   },
+  
   methods: {
     async authAdmin() {
       this.loading = true;
       try {
-        const res = await Auth.signinAdmin(this.adminAuth);
+        const res = await loginWithEmailAndPassword(this.adminAuth.email, this.adminAuth.password);
         this.userLocal = res.data;
         sessionStorage.setItem("userLocal", JSON.stringify(this.userLocal));
         this.loading = false;

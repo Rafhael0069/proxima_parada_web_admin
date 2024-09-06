@@ -1,24 +1,25 @@
-import { http } from "./config";
+import { getAuth, signInWithEmailAndPassword, signOut} from 'firebase/auth';
+import { app } from './firebaseConfig'; // Ajuste o caminho conforme necessário
 
-export default {
-  signinUser: (userAuth) => {
-    return http.post("/user/session", userAuth);
-  },
+const auth = getAuth(app);
 
-  signinAdmin: (adminAuth) => {
-    return http.post("/admin/session", adminAuth);
-  },
+export async function loginWithEmailAndPassword(email, password) {
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    // Sucesso no login
+    return userCredential;
+  } catch (error) {
+    // Erro no login
+    throw new Error(error.message);
+  }
+}
 
-
-  signupUser: (userData) => {
-    return http.post("/users", userData);
-  },
-
-  logout: () => {
-    return http.post("/sessions/logout");
-  },
-
-  resume: () => {
-    return http.post("/sessions/resume");
-  },
-};
+export async function logout() {
+  try {
+    await signOut(auth);
+    console.log('Logout bem-sucedido!');
+  } catch (error) {
+    console.error('Erro ao deslogar:', error);
+    throw new Error(error.message);
+  }
+}

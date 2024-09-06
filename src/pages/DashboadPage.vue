@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import Admin from "../services/admin";
+//import Admin from "../services/admin";
 
 export default {
   // eslint-disable-next-line vue/multi-word-component-names
@@ -55,7 +55,7 @@ export default {
     };
   },
   methods: {
-    async getStatistics() {
+    /*async getStatistics() {
       this.loading = true;
       try {
         const res = await Admin.getStatistics();
@@ -72,10 +72,10 @@ export default {
         }
         console.log(response.data);
       }
-    },
+    },*/
   },
   created() {
-    this.getStatistics();
+    //this.getStatistics();
   },
 };
 </script>
