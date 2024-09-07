@@ -228,7 +228,7 @@
 
 <script>
 //import Admin from "../services/admin";
-import { collection, getDocs, getFirestore, doc, runTransaction } from "firebase/firestore";
+import { collection, getDocs, getFirestore, doc, runTransaction, where, query } from "firebase/firestore";
 import { db } from "@/services/firebaseConfig";
 
 export default {
@@ -257,7 +257,7 @@ export default {
       this.requisitions = [];
       try {
         this.loading = true;
-        const querySnapshot = await getDocs(collection(db, "requisitions"));
+        const querySnapshot = await getDocs(query(collection(db, "requisitions"), where("readeRequest", "==", false)))
         querySnapshot.forEach(dr => {
           this.requisitions.push(dr.data());
         });
@@ -296,9 +296,8 @@ export default {
         this.erroAlert = true;
       }
       this.loading = false;
-      console.log(this.driverRequests)
+      console.log('aq', this.requisitions)
     },
-    
 
     async updateStatusRequest(status, selectedItem) {
       const db = getFirestore();
@@ -325,7 +324,7 @@ export default {
               "isDrive": status,
             },
             "statusRequest": status,
-            "readRequest": status,
+            "readeRequest": status,
           });
 
           // Atualizar o campo na coleção 'users'
@@ -399,6 +398,7 @@ export default {
 
   created() {
     this.getAllStatusRequest();
+    this.adoifgjade();
   },
 };
 </script>
